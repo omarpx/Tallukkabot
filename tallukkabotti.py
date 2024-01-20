@@ -1,4 +1,6 @@
 from typing import Final
+
+# pip install python-telegram-bot
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import random
@@ -6,7 +8,6 @@ from datetime import datetime
 
 TOKEN: Final = "6847538676:AAHs6fqbhVv4rr0MKgke4IQPhdFT_hPMwUY"
 username: Final = "@tallukkabot"
-
 
 # komennot
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -49,7 +50,8 @@ def handle_response(text: str) -> str:
     f"Öööö kello tulee koht {datetime.now().strftime('%H:%M')} et oisko teijä aika lähtee koht? :D", 
     "Juuuuh :D"
     # Saa lisäillä lisää Eetun heittoja :D
-]
+    ]
+
     if "NIH" in text:
         return random.choice(nih_responses)
     
@@ -59,24 +61,27 @@ def handle_response(text: str) -> str:
         'suusex 8=======D',
         'Eih'
     ]
+
     if "homo" in text or 'Homo' in text:
         return random.choice(homo_responses)
     
-    käykö_responses = [
+    kayko_responses = [
     'Juuh sellane käy', 
     'öööööööö EI', 
     'öööööööööööööö juuuh tän voi tul', 
     'vittu sä oot autisti :D',
     'JUH käyks vaik et painut vittuu :D'
-]
+    ]
+
     if 'käykö' in text or 'Käykö' in text or 'Käyks' in text or 'käyks' in text:
-        return random.choice(käykö_responses)
+        return random.choice(kayko_responses)
     
     tuplis_responses = [
         'Ketää tupliksel tänää?? Vetää AIIIVAN ylilaidallinen :DDD litra long iland ice teatä naamaan ja merilyniin tanssimaan :DDD flip cuppia autokannella :DDD iskelmäbaarii laulaa aikuista naista :DDDD PURKILLINE verovapaata denssii huuleen :DDD syömäkisa buffassa :DDD kolme pulloo vergiä boksereihi :DDD jouluristeilyl jatkoille :DDD huomenna päivällä klo 12 sammuu pallomereen :DD ketä imus????',
         'ööö no periaattees vois',
         'ööööööööö EI vitus 🤮🤮🤮'
     ]
+
     if 'tuplis' in text or 'Tuplis' in text or 'tupliksel' in text or 'Tupliksel' in text:
         return random.choice(tuplis_responses)
     
