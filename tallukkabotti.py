@@ -4,10 +4,17 @@ from typing import Final
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import random
-from datetime import datetime
+from datetime import datetime, time
 
 TOKEN: Final = "6847538676:AAHs6fqbhVv4rr0MKgke4IQPhdFT_hPMwUY"
 username: Final = "@tallukkabot"
+
+# Käytetään jos tietyllä aikavälillä /issleep komennossa
+def in_between(now, start, end):
+    if start <= end:
+        return start <= now < end
+    else:
+        return start <= now or now < end
 
 # komennot
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -25,6 +32,16 @@ papanviinat_responses = [
 async def papanviinat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = random.choice(papanviinat_responses)
     await update.message.reply_text(response)
+
+async def issleep_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    response = random.choice(issleep_responses)
+    await update.message.reply_text("Öööö E mä nuku nyh" if in_between(datetime.now().time(), time(21), time(6)) else response)
+
+issleep_responses = [
+    "Juuh käy sellane et tääl mun luon all in bileet",
+    "Juh on hereil tääl näih",
+    "Aa juuh oon jus menos sin Kilttiksel",
+    ]
 
 # VASTAUKSIA
 # --------------------------------------------------------------------------------------------------------    
@@ -132,6 +149,7 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('papanviinat', papanviinat_command))
+    app.add_handler(CommandHandler('issleep', issleep_command))
 
     # Messages
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
