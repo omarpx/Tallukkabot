@@ -37,12 +37,12 @@ async def papanviinat_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def issleep_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = random.choice(issleep_responses)
-    await update.message.reply_text("Öööö E mä nuku nyh" if in_between(datetime.now().time(), time(20), time(6)) else response)
+    await update.message.reply_text("*Tallukka is sleeping* \nTallukka says:\"Öööö E mä nuku nyh\"" if in_between(datetime.now().time(), time(20), time(6)) else response)
 
 issleep_responses = [
     "*Tallukka is awake* \nTallukka says:\"Juuh käy sellane et tääl mun luon all in bileet\"",
-    "*Tallukka is awake* \nTallukka says:\"Juh on hereil tääl näih",
-    "*Tallukka is awake* \nTallukka says:\"Aa juuh oon jus menos sin Kilttiksel",
+    "*Tallukka is awake* \nTallukka says:\"Juh on hereil tääl näih\"",
+    "*Tallukka is awake* \nTallukka says:\"Aa juuh oon jus menos sin Kilttiksel\"",
     ]
 
 # VASTAUKSIA
