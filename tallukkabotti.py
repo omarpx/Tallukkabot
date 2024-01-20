@@ -25,10 +25,8 @@ async def papanviinat_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     response = random.choice(papanviinat_responses)
     await update.message.reply_text(response)
 
-
 # VASTAUKSIA
 # --------------------------------------------------------------------------------------------------------    
-    
 
 def handle_response(text: str) -> str:
     
@@ -55,12 +53,11 @@ def handle_response(text: str) -> str:
     if "NIH" in text:
         return random.choice(nih_responses)
     
-
     homo_responses = [
         'isäs on :D',
         'no juuh :D',
         'suusex 8=======D',
-        'ens viikol ollaan kaikki homoja'
+        'Eih'
     ]
     if "homo" in text or 'Homo' in text:
         return random.choice(homo_responses)
@@ -99,9 +96,7 @@ def handle_response(text: str) -> str:
     
     return "mee ny vittuu siit"
 
-
 # -------------------------------------------------------------------------------------------------------
-
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_type: str = update.message.chat.type
@@ -121,13 +116,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print('Bot', response)
     await update.message.reply_text(response)
 
-
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f'Update {update} caused error {context.error}')
-
-
-
-
 
 if __name__ == '__main__':
     print('Starting bot...')
@@ -138,14 +128,11 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('papanviinat', papanviinat_command))
 
-
     # Messages
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
-
     # errors
     app.add_error_handler(error)
-
 
     # polls the bot
     print('Polling...')
