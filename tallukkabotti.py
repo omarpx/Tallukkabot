@@ -4,7 +4,7 @@ from typing import Final
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import random
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 TOKEN: Final = "6847538676:AAHs6fqbhVv4rr0MKgke4IQPhdFT_hPMwUY"
 username: Final = "@tallukkabot"
@@ -15,6 +15,8 @@ def in_between(now, start, end):
         return start <= now < end
     else:
         return start <= now or now < end
+    
+two_hours_from_now = str(format(datetime.now() + timedelta(hours=2), '%H:%M'))
 
 # komennot
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -35,12 +37,12 @@ async def papanviinat_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def issleep_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = random.choice(issleep_responses)
-    await update.message.reply_text("Öööö E mä nuku nyh" if in_between(datetime.now().time(), time(21), time(6)) else response)
+    await update.message.reply_text("Öööö E mä nuku nyh" if in_between(datetime.now().time(), time(20), time(6)) else response)
 
 issleep_responses = [
-    "Juuh käy sellane et tääl mun luon all in bileet",
-    "Juh on hereil tääl näih",
-    "Aa juuh oon jus menos sin Kilttiksel",
+    "*Tallukka is awake* \nTallukka says:\"Juuh käy sellane et tääl mun luon all in bileet\"",
+    "*Tallukka is awake* \nTallukka says:\"Juh on hereil tääl näih",
+    "*Tallukka is awake* \nTallukka says:\"Aa juuh oon jus menos sin Kilttiksel",
     ]
 
 # VASTAUKSIA
@@ -64,7 +66,7 @@ def handle_response(text: str) -> str:
     
     nih_responses = [
     "ÖÖÖÖÖ no emmää tiä riippuu vähä kontekstist :D",
-    f"Öööö kello tulee koht {datetime.now().strftime('%H:%M')} et oisko teijä aika lähtee koht? :D", 
+    f"Öööö kello tulee koht {two_hours_from_now} et oisko teijä aika lähtee koht? :D", 
     "Juuuuh :D"
     # Saa lisäillä lisää Eetun heittoja :D
     ]
