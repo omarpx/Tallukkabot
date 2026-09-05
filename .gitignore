@@ -1,2 +1,6 @@
 pythonanywhere.txt
 test.py
+.env
+stats.json
+__pycache__/
+*.pyc
