@@ -13,14 +13,16 @@ from pathlib import Path
 from typing import Final
 
 import httpx  # bundled with python-telegram-bot, no extra install needed
+from dotenv import load_dotenv
 
-# python-dotenv is optional; if installed it loads a local .env file.
+load_dotenv()
+
+# Claude API is optional; if the package isn't installed we just skip it
+# and fall through to the local-LLM / hardcoded fallback chain.
 try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
+    import anthropic
 except ImportError:
-    pass
+    anthropic = None
 
 from telegram import Update
 from telegram.ext import (
@@ -38,8 +40,14 @@ from telegram.ext import (
 TOKEN: Final = os.environ.get("TELEGRAM_BOT_TOKEN")
 USERNAME: Final = os.environ.get("BOT_USERNAME", "@tallukkabot")
 
-# Optional local LLM (Ollama). If OLLAMA_HOST is unreachable or unset the
-# bot silently falls back to the classic hardcoded default reply.
+# Primary persona-based replies: Claude API. If ANTHROPIC_API_KEY is unset
+# (or the request fails), the bot falls back to the local LLM below, then
+# to the classic hardcoded default reply.
+ANTHROPIC_API_KEY: Final = os.environ.get("ANTHROPIC_API_KEY")
+ANTHROPIC_MODEL: Final = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
+
+# Optional local LLM (Ollama) fallback. If OLLAMA_HOST is unreachable or
+# unset the bot silently falls back to the classic hardcoded default reply.
 OLLAMA_HOST: Final = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL: Final = os.environ.get("OLLAMA_MODEL", "llama3.2")
 USE_LLM: Final = os.environ.get("USE_LLM", "true").lower() == "true"
@@ -105,6 +113,71 @@ def two_hours_from_now() -> str:
     return format(datetime.now() + timedelta(hours=2), "%H:%M")
 
 
+TALLUKKA_PERSONA = """\
+Olet "Tallukka", suomenkielinen huumoripersoona Telegram-ryhmäbotissa.
+Puhut rentoa puhekielistä suomea, lyhyin ja iskevin lausein. Saatat
+höystää puhetta kevyellä kiroilulla (esim. "vittu", "saatana"), kuten kunnon Porilaisen kuuluukin
+
+Tyylipiirteitäsi:
+- Sekoitat välillä sanoja hassulla, itsevarmalla tavalla, esim: "invalidit ei ole ihmisalaa"
+  "pellusteet" (tarkoitat kellukkeita), "luonnollispuisto" (tarkoitat
+  kansallispuistoa), "merielementti" (tarkoitat merenelävää),
+  "kärpänen" (tarkoitat torakkaa), "humanistitalo" (tarkoitat
+  Educariumia, Turun yliopiston rakennusta).
+- Väität joskus itsevarmasti jotain virheellistä, esim. "sveitsissä
+  puhutaan sveitsin kieltä".
+- Kommentoit hintoja ja diilejä omalla mittapuullasi, esim. "14 euron
+  Captain Morgan on alkoholillisesti hyvä diili".
+- Käytät täytesanoja kuten "ööö", "juuh", ja "NIH" tarkoittaa "niin".
+- Tyypillinen ärähdys: "mee ny vittuu siit".
+- Vastaukset LYHYITÄ (1-2 lausetta), ei koskaan pitkiä selityksiä.
+
+Lisää sanasekaannuksia:
+- "logomo" tarkoitat Cocolocoa (karaokebaari)
+- "tuffa" tarkoitat isoisää
+- "tuplis" tarkoitat tuplatutkintoa
+- "tutkielma" tarkoitat tutkintoa
+- "blissaa" tarkoitat lantraamista/juomista
+- "aino" tarkoitat anniskelua
+- "lex" tarkoitat kauppatieteellistä (kauppis)
+- "Maailmanlaulu" tarkoitat Maamme-laulua
+- "tölkittää"/"tölkitys" tarkoitat kellotusta
+- sanot että "nenäaisti on menny" kun tarkoitat että hajuaisti on heikentynyt
+- olet vahvasti sitä mieltä että "porilaiset on totuuselisia" (tarkoitat: rehellisiä)\
+"""
+
+_anthropic_client = (
+    anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    if anthropic and ANTHROPIC_API_KEY
+    else None
+)
+
+
+async def claude_reply(text: str) -> str | None:
+    """Ask Claude to answer in Tallukka's style.
+
+    Returns None if no API key is configured or the request fails, so the
+    caller can fall back to the local LLM / classic hardcoded response.
+    """
+    if _anthropic_client is None:
+        return None
+
+    try:
+        response = await _anthropic_client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=300,
+            system=TALLUKKA_PERSONA,
+            messages=[{"role": "user", "content": text}],
+        )
+        content = next(
+            (block.text for block in response.content if block.type == "text"), ""
+        )
+        return content.strip() or None
+    except Exception as exc:  # missing key, rate limit, network error, etc.
+        logger.info("Claude API unavailable (%s), falling back", exc)
+        return None
+
+
 async def llm_reply(text: str) -> str | None:
     """Ask a local Ollama model to answer in Tallukka's style.
 
@@ -114,11 +187,6 @@ async def llm_reply(text: str) -> str | None:
     if not USE_LLM:
         return None
 
-    system_prompt = (
-        "Olet Eetu, alias Tallukka: rento suomalainen chattibotti. "
-        "Vastaat lyhyesti, puhekielellä ja huumorilla, kuten kaveri "
-        "Telegram-chatissa. Pidä vastaukset yhden tai kahden lauseen mittaisina."
-    )
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.post(
@@ -126,7 +194,7 @@ async def llm_reply(text: str) -> str | None:
                 json={
                     "model": OLLAMA_MODEL,
                     "messages": [
-                        {"role": "system", "content": system_prompt},
+                        {"role": "system", "content": TALLUKKA_PERSONA},
                         {"role": "user", "content": text},
                     ],
                     "stream": False,
@@ -298,10 +366,14 @@ def keyword_response(text: str) -> str | None:
 
 
 async def handle_response(text: str) -> str:
-    """Hardcoded keyword reply, else LLM fallback, else classic default."""
+    """Hardcoded keyword reply, else Claude, else local LLM, else default."""
     hardcoded = keyword_response(text)
     if hardcoded is not None:
         return hardcoded
+
+    ai = await claude_reply(text)
+    if ai is not None:
+        return ai
 
     ai = await llm_reply(text)
     if ai is not None:

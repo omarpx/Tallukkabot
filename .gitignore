@@ -4,3 +4,4 @@ test.py
 stats.json
 __pycache__/
 *.pyc
+.venv/
