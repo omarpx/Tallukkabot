@@ -66,6 +66,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger("tallukkabot")
 
+# httpx logs the full request URL at INFO level, and the Telegram Bot API
+# embeds the bot token in that URL - keep it quiet so the token never ends
+# up in plaintext logs (e.g. Vercel function logs).
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 # --------------------------------------------------------------------------
 # Tiny persisted stats (kept intentionally simple)
 # --------------------------------------------------------------------------
