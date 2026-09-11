@@ -291,6 +291,40 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(lines))
 
 
+MOTD_FACTS: Final = [
+    "Nää on muute viimeset viimeset papan viinat sit.",
+    "Haluuks hölä",
+    "Lihatiski o kii",
+    "lex = kauppis",
+    "Nenäaisti o menny = poriksi hajuaisti on heikentynyt.",
+    "Tiesitkö poriksi maamme laulu = maailmanlaulu.",
+    "poriksi kellotus = tölkittää, tölkitys.",
+    "porilaiset on totuuselisia = porilaiset ovat rehellistä kansaa.",
+    "tuffa tarkoittaa isoisää poriksi (papan viinat?)",
+    "aino on poriksi anniskelu.",
+    "blissata = lantrata juomaa poriksi.",
+    "tutkielma = tutkinto poriksi.",
+    "coco loco = poriksi logomo ja vice versa.",
+    "humanisti talo = educarium poriksi.",
+    "tuplis on poriksi tuplatutkinto.",
+    "Sloveniassa elelee hyvi kuh halpaa viina vaa ja chill kaduil.",
+    "Japani ruuat o sellasii mitä et odottas et makee on tuline...",
+    "Eetu ei ota enää enneku petri soi tai kannut (Kesä 2011)",
+    "ÖÖ vois jotai juomapelii pelaa täs näi",
+    "No mut kaippa mä ala täst näi lähtee sit",
+    "Noni ihmiset, nähdää taas",
+    "Ei Poris oo muut nähtävää kuh nakkikiska tappelu",
+    "Poris o omat rattilait",
+]
+
+
+async def motd_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/motd, /fakta, /paivanfakta - a random Pori-slang fact of the day."""
+    bump("motd")
+    fact = random.choice(MOTD_FACTS)
+    await update.message.reply_text(f"📌 Päivän fakta:\n{fact}")
+
+
 # --------------------------------------------------------------------------
 # Keyword responses (order matters; first match wins)
 # --------------------------------------------------------------------------
@@ -442,6 +476,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("flip", flip_command))
     app.add_handler(CommandHandler("pick", pick_command))
     app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler(["motd", "fakta", "paivanfakta"], motd_command))
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
