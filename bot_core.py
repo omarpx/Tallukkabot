@@ -329,7 +329,46 @@ async def motd_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Keyword responses (order matters; first match wins)
 # --------------------------------------------------------------------------
 
-GREETINGS = ["moi", "hei", "moro"]
+GREETINGS: Final = {
+    "moi",
+    "hei",
+    "moro",
+    "heippa",
+    "terve",
+    "morjens",
+    "moikka",
+    "tsau",
+    "morjes",
+    "heissan",
+    "jou",
+    "terppa",
+    "hola",
+    "hei vaan",
+}
+
+KAYKO_KEYWORDS: Final = {
+    "käykö",
+    "käyks",
+    "sopiiko",
+    "sopiiks",
+    "onnistuuko",
+    "onnistuuks",
+    "kävisköhän",
+    "kelpaisko",
+}
+
+TUPLIS_KEYWORDS: Final = {"tuplis", "tupliksel"}
+
+KULLI_KEYWORDS: Final = {
+    "kullin pituus",
+    "kullin koko",
+    "kalun pituus",
+    "kalun koko",
+    "munan koko",
+    "kyrpä",
+    "kyrvän pituus",
+    "kyrvän koko",
+}
 
 KALJA_RESPONSES = [
     "ääääääääääh no viihtu kai pitää sit ryypätä",
@@ -389,11 +428,11 @@ def keyword_response(text: str) -> str | None:
         return random.choice(nih_responses())
     if "homo" in processed:
         return random.choice(HOMO_RESPONSES)
-    if "käykö" in processed or "käyks" in processed:
+    if any(word in processed for word in KAYKO_KEYWORDS):
         return random.choice(KAYKO_RESPONSES)
-    if "tuplis" in processed or "tupliksel" in processed:
+    if any(word in processed for word in TUPLIS_KEYWORDS):
         return random.choice(TUPLIS_RESPONSES)
-    if "kullin pituus" in processed or "kullin koko" in processed:
+    if any(word in processed for word in KULLI_KEYWORDS):
         return kullin_pituus_reply()
     return None
 
